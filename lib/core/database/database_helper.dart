@@ -19,8 +19,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -64,6 +65,16 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE savings_withdrawals (
+        id $idType,
+        amount $realType,
+        description $textTypeNullable,
+        date $textType,
+        created_at $textType
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE custom_categories (
         id $idType,
         name $textType,
@@ -71,6 +82,20 @@ class DatabaseHelper {
         UNIQUE(name, type)
       )
     ''');
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS savings_withdrawals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount REAL NOT NULL,
+          description TEXT,
+          date TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   // Generic CRUD wrapper methods

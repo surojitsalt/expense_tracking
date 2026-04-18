@@ -19,6 +19,9 @@ import '../../features/savings/domain/savings_repository.dart';
 import '../../features/savings/data/savings_repository_impl.dart';
 import '../../features/savings/domain/savings_usecase.dart';
 import '../../features/savings/presentation/savings_bloc.dart';
+import '../../features/savings/domain/savings_withdrawal_repository.dart';
+import '../../features/savings/data/savings_withdrawal_repository_impl.dart';
+import '../../features/savings/domain/savings_withdrawal_usecase.dart';
 
 // Reports
 import '../../features/reports/bloc/report_bloc.dart';
@@ -33,11 +36,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<IncomeRepository>(() => IncomeRepositoryImpl(db: sl()));
   sl.registerLazySingleton<ExpenseRepository>(() => ExpenseRepositoryImpl(db: sl()));
   sl.registerLazySingleton<SavingsRepository>(() => SavingsRepositoryImpl(db: sl()));
-  
+  sl.registerLazySingleton<SavingsWithdrawalRepository>(() => SavingsWithdrawalRepositoryImpl(db: sl()));
+
   // UseCases
   sl.registerLazySingleton(() => IncomeUseCase(sl()));
   sl.registerLazySingleton(() => ExpenseUseCase(sl()));
   sl.registerLazySingleton(() => SavingsUseCase(sl()));
+  sl.registerLazySingleton(() => SavingsWithdrawalUseCase(sl()));
 
   // BLoCs
   sl.registerFactory(() => IncomeBloc(incomeUseCase: sl()));
@@ -47,5 +52,6 @@ Future<void> initDependencies() async {
         incomeUseCase: sl(),
         expenseUseCase: sl(),
         savingsUseCase: sl(),
+        withdrawalUseCase: sl(),
       ));
 }
