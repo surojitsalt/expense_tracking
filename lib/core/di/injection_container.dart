@@ -45,7 +45,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => SavingsWithdrawalUseCase(sl()));
 
   // BLoCs
-  sl.registerFactory(() => IncomeBloc(incomeUseCase: sl()));
+  sl.registerFactory(() => IncomeBloc(incomeUseCase: sl(), savingsUseCase: sl()));
   sl.registerFactory(() => ExpenseBloc(expenseUseCase: sl()));
   sl.registerFactory(() => SavingsBloc(savingsUseCase: sl()));
   sl.registerFactory(() => ReportBloc(

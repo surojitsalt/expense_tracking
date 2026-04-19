@@ -9,7 +9,10 @@ class SavingsUseCase {
   Future<List<SavingsModel>> getAllSavings() => repository.getAllSavings();
   
   Future<int> addSaving(SavingsModel saving) {
-    if (saving.amount <= 0) {
+    if (saving.amount == 0) {
+      throw Exception("Amount cannot be zero");
+    }
+    if (saving.amount < 0 && saving.category != 'Withdrawn') {
       throw Exception("Amount must be greater than zero");
     }
     return repository.addSaving(saving);

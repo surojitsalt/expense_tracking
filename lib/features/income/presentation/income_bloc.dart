@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../domain/income_model.dart';
 import '../domain/income_usecase.dart';
+import '../../savings/domain/savings_model.dart';
+import '../../savings/domain/savings_usecase.dart';
 
 // Events
 abstract class IncomeEvent extends Equatable {
@@ -77,8 +79,9 @@ class IncomeError extends IncomeState {
 // BLoC
 class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
   final IncomeUseCase incomeUseCase;
+  final SavingsUseCase savingsUseCase;
 
-  IncomeBloc({required this.incomeUseCase}) : super(IncomeInitial()) {
+  IncomeBloc({required this.incomeUseCase, required this.savingsUseCase}) : super(IncomeInitial()) {
     on<LoadIncomes>(_onLoadIncomes);
     on<AddIncome>(_onAddIncome);
     on<DeleteIncome>(_onDeleteIncome);
@@ -101,6 +104,16 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
   Future<void> _onAddIncome(AddIncome event, Emitter<IncomeState> emit) async {
     try {
       await incomeUseCase.addIncome(event.income);
+      if (event.income.category == 'Savings') {
+        final withdrawal = SavingsModel(
+          amount: -event.income.amount,
+          category: 'Withdrawn',
+          description: event.income.description,
+          date: event.income.date,
+          createdAt: DateTime.now(),
+        );
+        await savingsUseCase.addSaving(withdrawal);
+      }
       add(LoadIncomes());
     } catch (e) {
       emit(IncomeError(e.toString()));

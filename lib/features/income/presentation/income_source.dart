@@ -17,7 +17,7 @@ class IncomeSourceScreen extends StatefulWidget {
 }
 
 class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
-  final List<String> _defaultCategories = ['Salary', 'Freelance', 'Consultancy'];
+  final List<String> _defaultCategories = ['Salary', 'Freelance', 'Consultancy', 'Savings'];
 
   @override
   void initState() {
