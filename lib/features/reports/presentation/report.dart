@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/expense_tracker_app_colors.dart';
 import '../bloc/report_bloc.dart';
 import '../../savings/domain/savings_withdrawal_model.dart';
+import '../../settings/presentation/settings_bloc.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -38,6 +39,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _showWithdrawalDialog() {
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final amountController = TextEditingController();
     final descController = TextEditingController();
     DateTime selectedDate = DateTime.now();
@@ -54,10 +56,10 @@ class _ReportScreenState extends State<ReportScreen> {
                 TextField(
                   controller: amountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount (₹)',
-                    prefixIcon: Icon(Icons.currency_rupee),
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: 'Amount ($currencySymbol)',
+                    prefixIcon: const Icon(Icons.monetization_on_outlined),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -142,6 +144,7 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ExpenseTrackerAppColors>()!;
+    final currencySymbol = context.watch<SettingsBloc>().state.currencySymbol;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -212,9 +215,9 @@ class _ReportScreenState extends State<ReportScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildSummaryCard('Income', state.totalIncome, colors.incomeLight, colors.income),
-                      _buildSummaryCard('Expense', state.totalExpense, colors.expenseLight, colors.expense),
-                      _buildSummaryCard('Withdrawn', state.totalWithdrawals, Colors.deepOrange.shade50, Colors.deepOrange),
+                      _buildSummaryCard('Income', state.totalIncome, colors.incomeLight, colors.income, currencySymbol),
+                      _buildSummaryCard('Expense', state.totalExpense, colors.expenseLight, colors.expense, currencySymbol),
+                      _buildSummaryCard('Withdrawn', state.totalWithdrawals, Colors.deepOrange.shade50, Colors.deepOrange, currencySymbol),
                     ],
                   ),
                 ),
@@ -246,7 +249,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '₹ ${netSavings.toStringAsFixed(2)}',
+                                  '$currencySymbol ${netSavings.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -264,7 +267,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                 style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                               ),
                               Text(
-                                '₹${state.totalIncome.toStringAsFixed(0)} − ₹${state.totalExpense.toStringAsFixed(0)} − ₹${state.totalWithdrawals.toStringAsFixed(0)}',
+                                '$currencySymbol${state.totalIncome.toStringAsFixed(0)} − $currencySymbol${state.totalExpense.toStringAsFixed(0)} − $currencySymbol${state.totalWithdrawals.toStringAsFixed(0)}',
                                 style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                               ),
                             ],
@@ -321,7 +324,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                       ),
                                     ),
                                     DataCell(Text(r['category'])),
-                                    DataCell(Text('₹ ${r['amount']}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    DataCell(Text('$currencySymbol ${(r['amount'] as double).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))),
                                   ],
                                 );
                               }).toList(),
@@ -340,7 +343,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, Color bgColor, Color textColor) {
+  Widget _buildSummaryCard(String title, double amount, Color bgColor, Color textColor, String currencySymbol) {
     return Expanded(
       child: Card(
         color: bgColor,
@@ -351,7 +354,7 @@ class _ReportScreenState extends State<ReportScreen> {
               Text(title, style: const TextStyle(fontSize: 12)),
               const SizedBox(height: 8),
               Text(
-                '₹ ${amount.toStringAsFixed(0)}',
+                '$currencySymbol ${amount.toStringAsFixed(0)}',
                 style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
                 overflow: TextOverflow.ellipsis,
               ),

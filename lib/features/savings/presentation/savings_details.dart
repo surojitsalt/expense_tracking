@@ -8,6 +8,7 @@ import '../../../core/widgets/category_chip_selector.dart';
 import '../../../core/widgets/record_card.dart';
 import '../domain/savings_model.dart';
 import 'savings_bloc.dart';
+import '../../../features/settings/presentation/settings_bloc.dart';
 
 class SavingsDetailsScreen extends StatefulWidget {
   const SavingsDetailsScreen({super.key});
@@ -26,6 +27,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
   }
 
   void _showAddSavingBottomSheet(BuildContext context, List<String> customCategories) {
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedCategory = _defaultCategories.first;
@@ -59,7 +61,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    AmountInputField(controller: amountController),
+                    AmountInputField(controller: amountController, currencySymbol: currencySymbol),
                     const SizedBox(height: 16),
                     const Text('Category'),
                     const SizedBox(height: 8),
@@ -212,12 +214,14 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                     children: [
                       const Text('Total Savings', style: TextStyle(fontSize: 14)),
                       const SizedBox(height: 8),
-                      Text(
-                        '₹ ${state.totalSavings.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: colors.savings,
+                      BlocBuilder<SettingsBloc, SettingsState>(
+                        builder: (context, settings) => Text(
+                          '${settings.currencySymbol} ${state.totalSavings.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colors.savings,
+                          ),
                         ),
                       ),
                     ],

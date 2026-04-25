@@ -2,6 +2,10 @@ import 'package:get_it/get_it.dart';
 
 import '../database/database_helper.dart';
 
+// Settings
+import '../../features/settings/data/settings_service.dart';
+import '../../features/settings/presentation/settings_bloc.dart';
+
 // Income
 import '../../features/income/domain/income_repository.dart';
 import '../../features/income/data/income_repository_impl.dart';
@@ -29,6 +33,10 @@ import '../../features/reports/bloc/report_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
+  // Settings
+  sl.registerLazySingleton<SettingsService>(() => SettingsService());
+  sl.registerFactory(() => SettingsBloc(settingsService: sl())..add(const LoadSettings()));
+
   // Database Helper
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper.instance);
 

@@ -8,6 +8,7 @@ import '../../../core/widgets/category_chip_selector.dart';
 import '../../../core/widgets/record_card.dart';
 import '../domain/expense_model.dart';
 import 'expense_bloc.dart';
+import '../../../features/settings/presentation/settings_bloc.dart';
 
 class ExpenseDetailsScreen extends StatefulWidget {
   const ExpenseDetailsScreen({super.key});
@@ -28,6 +29,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
   }
 
   void _showAddExpenseBottomSheet(BuildContext context, List<String> customCategories) {
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedCategory = _defaultCategories.first;
@@ -61,7 +63,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    AmountInputField(controller: amountController),
+                    AmountInputField(controller: amountController, currencySymbol: currencySymbol),
                     const SizedBox(height: 16),
                     const Text('Category'),
                     const SizedBox(height: 8),
@@ -214,12 +216,14 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                     children: [
                       const Text('Total Expense', style: TextStyle(fontSize: 14)),
                       const SizedBox(height: 8),
-                      Text(
-                        '₹ ${state.totalExpense.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: colors.expense,
+                      BlocBuilder<SettingsBloc, SettingsState>(
+                        builder: (context, settings) => Text(
+                          '${settings.currencySymbol} ${state.totalExpense.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colors.expense,
+                          ),
                         ),
                       ),
                     ],

@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 class AmountInputField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;
+  final String currencySymbol;
 
   const AmountInputField({
     super.key,
     required this.controller,
+    required this.currencySymbol,
     this.labelText = 'Amount',
   });
 
@@ -30,7 +32,7 @@ class AmountInputField extends StatelessWidget {
       },
       decoration: InputDecoration(
         labelText: labelText,
-        prefixText: '₹ ',
+        prefixText: '$currencySymbol ',
         prefixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     );

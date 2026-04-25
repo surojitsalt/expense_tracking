@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../features/settings/presentation/settings_bloc.dart';
 
 class RecordCard extends StatelessWidget {
   final double amount;
@@ -66,11 +68,13 @@ class RecordCard extends StatelessWidget {
               ),
             ],
           ),
-          trailing: Text(
-            '₹ ${amount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+          trailing: BlocBuilder<SettingsBloc, SettingsState>(
+            builder: (context, settings) => Text(
+              '${settings.currencySymbol} ${amount.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
         ),

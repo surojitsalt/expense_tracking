@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/expense_tracker_app_colors.dart';
 import '../bloc/report_bloc.dart';
+import '../../settings/presentation/settings_bloc.dart';
 
 class PieChartScreen extends StatefulWidget {
   const PieChartScreen({super.key});
@@ -26,6 +27,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<ExpenseTrackerAppColors>()!;
+    final currencySymbol = context.watch<SettingsBloc>().state.currencySymbol;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -62,9 +64,10 @@ class _PieChartScreenState extends State<PieChartScreen> {
                   ),
                 ),
                 if (_selectedTypeIndex == 0)
-                  Expanded(child: _buildSummaryChart(state, colors))
+                  Expanded(child: _buildSummaryChart(state, colors, currencySymbol))
                 else
-                  Expanded(child: _buildCategoryChart(state, colors)),
+                  Expanded(child: _buildCategoryChart(state, colors, currencySymbol)),
+
               ],
             );
           }
@@ -74,7 +77,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
     );
   }
 
-  Widget _buildSummaryChart(ReportLoaded state, ExpenseTrackerAppColors colors) {
+  Widget _buildSummaryChart(ReportLoaded state, ExpenseTrackerAppColors colors, String currencySymbol) {
     final totalIncome = state.totalIncome;
     final totalExpense = state.totalExpense;
     final netSavings = state.netSavings;
@@ -99,7 +102,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Text(
-            'From Total Income  ₹ ${totalIncome.toStringAsFixed(0)}',
+            'From Total Income  $currencySymbol ${totalIncome.toStringAsFixed(0)}',
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
@@ -155,7 +158,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
                 ),
                 title: Text(slice.label),
                 trailing: Text(
-                  '₹ ${slice.value.toStringAsFixed(2)}  (${pct.toStringAsFixed(1)}%)',
+                  '$currencySymbol ${slice.value.toStringAsFixed(2)}  (${pct.toStringAsFixed(1)}%)',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               );
@@ -166,7 +169,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
     );
   }
 
-  Widget _buildCategoryChart(ReportLoaded state, ExpenseTrackerAppColors colors) {
+  Widget _buildCategoryChart(ReportLoaded state, ExpenseTrackerAppColors colors, String currencySymbol) {
     Map<String, double> dataMap = {};
     Color baseColor;
 
@@ -221,7 +224,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
         ),
         Expanded(
           flex: 1,
-          child: _buildLegend(dataMap, baseColor),
+          child: _buildLegend(dataMap, baseColor, currencySymbol),
         ),
       ],
     );
@@ -253,7 +256,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
     });
   }
 
-  Widget _buildLegend(Map<String, double> dataMap, Color baseColor) {
+  Widget _buildLegend(Map<String, double> dataMap, Color baseColor, String currencySymbol) {
     final entries = dataMap.entries.toList();
     return ListView.builder(
       itemCount: entries.length,
@@ -266,7 +269,7 @@ class _PieChartScreenState extends State<PieChartScreen> {
           leading: Container(width: 16, height: 16, color: sliceColor),
           title: Text(entries[i].key),
           trailing: Text(
-            '₹ ${entries[i].value.toStringAsFixed(2)}',
+            '$currencySymbol ${entries[i].value.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         );

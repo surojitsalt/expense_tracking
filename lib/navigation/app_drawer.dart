@@ -92,6 +92,18 @@ class AppDrawer extends StatelessWidget {
               }
             },
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.settings, color: Colors.grey),
+            title: const Text('Settings'),
+            selected: currentRoute == '/settings',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != '/settings') {
+                Navigator.pushReplacementNamed(context, '/settings');
+              }
+            },
+          ),
         ],
       ),
     );

@@ -8,6 +8,7 @@ import '../../../core/widgets/category_chip_selector.dart';
 import '../../../core/widgets/record_card.dart';
 import '../domain/income_model.dart';
 import 'income_bloc.dart';
+import '../../../features/settings/presentation/settings_bloc.dart';
 
 class IncomeSourceScreen extends StatefulWidget {
   const IncomeSourceScreen({super.key});
@@ -26,6 +27,7 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
   }
 
   void _showAddIncomeBottomSheet(BuildContext context, List<String> customCategories) {
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedCategory = _defaultCategories.first;
@@ -59,7 +61,7 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    AmountInputField(controller: amountController),
+                    AmountInputField(controller: amountController, currencySymbol: currencySymbol),
                     const SizedBox(height: 16),
                     const Text('Category'),
                     const SizedBox(height: 8),
@@ -212,12 +214,14 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
                     children: [
                       const Text('Total Income', style: TextStyle(fontSize: 14)),
                       const SizedBox(height: 8),
-                      Text(
-                        '₹ ${state.totalIncome.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: colors.income,
+                      BlocBuilder<SettingsBloc, SettingsState>(
+                        builder: (context, settings) => Text(
+                          '${settings.currencySymbol} ${state.totalIncome.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colors.income,
+                          ),
                         ),
                       ),
                     ],
