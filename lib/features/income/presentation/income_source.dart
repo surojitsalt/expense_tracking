@@ -26,12 +26,23 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
     context.read<IncomeBloc>().add(LoadIncomes());
   }
 
-  void _showAddIncomeBottomSheet(BuildContext context, List<String> customCategories) {
+  void _showIncomeBottomSheet(
+    BuildContext context,
+    List<String> customCategories, {
+    IncomeModel? existing,
+  }) {
+    final isEdit = existing != null;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final amountController = TextEditingController();
-    final descriptionController = TextEditingController();
-    String selectedCategory = _defaultCategories.first;
-    DateTime selectedDate = DateTime.now();
+    final amountController = TextEditingController(
+      text: isEdit ? existing.amount.toString() : '',
+    );
+    final descriptionController = TextEditingController(
+      text: isEdit ? (existing.description ?? '') : '',
+    );
+    String selectedCategory = isEdit
+        ? existing.category
+        : _defaultCategories.first;
+    DateTime selectedDate = isEdit ? existing.date : DateTime.now();
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -56,9 +67,9 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Add Income',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Text(
+                      isEdit ? 'Edit Income' : 'Add Income',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     AmountInputField(controller: amountController, currencySymbol: currencySymbol),
@@ -120,20 +131,34 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             final amount = double.parse(amountController.text);
-                            final income = IncomeModel(
-                              amount: amount,
-                              category: selectedCategory,
-                              description: descriptionController.text.isEmpty
-                                  ? null
-                                  : descriptionController.text,
-                              date: selectedDate,
-                              createdAt: DateTime.now(),
-                            );
-                            this.context.read<IncomeBloc>().add(AddIncome(income));
+                            final description = descriptionController.text.isEmpty
+                                ? null
+                                : descriptionController.text;
+                            if (isEdit) {
+                              final updated = existing.copyWith(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                              );
+                              this.context.read<IncomeBloc>().add(UpdateIncome(updated));
+                            } else {
+                              final income = IncomeModel(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                                createdAt: DateTime.now(),
+                              );
+                              this.context.read<IncomeBloc>().add(AddIncome(income));
+                            }
                             Navigator.pop(ctx);
                           }
                         },
-                        child: const Text('Save Income', style: TextStyle(color: Colors.white)),
+                        child: Text(
+                          isEdit ? 'Update Income' : 'Save Income',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -241,6 +266,11 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
                         onDelete: () {
                           context.read<IncomeBloc>().add(DeleteIncome(item.id!));
                         },
+                        onTap: () => _showIncomeBottomSheet(
+                          context,
+                          state.customCategories,
+                          existing: item,
+                        ),
                       );
                     },
                   ),
@@ -261,7 +291,7 @@ class _IncomeSourceScreenState extends State<IncomeSourceScreen> {
           }
           return FloatingActionButton(
             backgroundColor: colors.income,
-            onPressed: () => _showAddIncomeBottomSheet(context, customCategories),
+            onPressed: () => _showIncomeBottomSheet(context, customCategories),
             child: const Icon(Icons.add),
           );
         },

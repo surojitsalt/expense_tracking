@@ -22,6 +22,15 @@ class AddExpense extends ExpenseEvent {
   List<Object?> get props => [expense];
 }
 
+class UpdateExpense extends ExpenseEvent {
+  final ExpenseModel expense;
+
+  const UpdateExpense(this.expense);
+
+  @override
+  List<Object?> get props => [expense];
+}
+
 class DeleteExpense extends ExpenseEvent {
   final int id;
 
@@ -81,6 +90,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ExpenseBloc({required this.expenseUseCase}) : super(ExpenseInitial()) {
     on<LoadExpenses>(_onLoadExpenses);
     on<AddExpense>(_onAddExpense);
+    on<UpdateExpense>(_onUpdateExpense);
     on<DeleteExpense>(_onDeleteExpense);
     on<LoadCustomCategories>(_onLoadCustomCategories);
     on<AddCustomCategory>(_onAddCustomCategory);
@@ -101,6 +111,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> _onAddExpense(AddExpense event, Emitter<ExpenseState> emit) async {
     try {
       await expenseUseCase.addExpense(event.expense);
+      add(LoadExpenses());
+    } catch (e) {
+      emit(ExpenseError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateExpense(UpdateExpense event, Emitter<ExpenseState> emit) async {
+    try {
+      await expenseUseCase.updateExpense(event.expense);
       add(LoadExpenses());
     } catch (e) {
       emit(ExpenseError(e.toString()));

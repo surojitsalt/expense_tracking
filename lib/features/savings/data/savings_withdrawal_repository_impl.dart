@@ -14,6 +14,11 @@ class SavingsWithdrawalRepositoryImpl implements SavingsWithdrawalRepository {
   }
 
   @override
+  Future<int> updateWithdrawal(SavingsWithdrawalModel withdrawal) {
+    return db.update(tableName, withdrawal.id!, withdrawal.toMap());
+  }
+
+  @override
   Future<int> deleteWithdrawal(int id) {
     return db.delete(tableName, id);
   }

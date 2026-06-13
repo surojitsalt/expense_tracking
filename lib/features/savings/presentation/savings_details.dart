@@ -26,12 +26,23 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
     context.read<SavingsBloc>().add(LoadSavings());
   }
 
-  void _showAddSavingBottomSheet(BuildContext context, List<String> customCategories) {
+  void _showSavingBottomSheet(
+    BuildContext context,
+    List<String> customCategories, {
+    SavingsModel? existing,
+  }) {
+    final isEdit = existing != null;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final amountController = TextEditingController();
-    final descriptionController = TextEditingController();
-    String selectedCategory = _defaultCategories.first;
-    DateTime selectedDate = DateTime.now();
+    final amountController = TextEditingController(
+      text: isEdit ? existing.amount.toString() : '',
+    );
+    final descriptionController = TextEditingController(
+      text: isEdit ? (existing.description ?? '') : '',
+    );
+    String selectedCategory = isEdit
+        ? existing.category
+        : _defaultCategories.first;
+    DateTime selectedDate = isEdit ? existing.date : DateTime.now();
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -56,9 +67,9 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Add Saving',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Text(
+                      isEdit ? 'Edit Saving' : 'Add Saving',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     AmountInputField(controller: amountController, currencySymbol: currencySymbol),
@@ -120,20 +131,34 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             final amount = double.parse(amountController.text);
-                            final saving = SavingsModel(
-                              amount: amount,
-                              category: selectedCategory,
-                              description: descriptionController.text.isEmpty
-                                  ? null
-                                  : descriptionController.text,
-                              date: selectedDate,
-                              createdAt: DateTime.now(),
-                            );
-                            this.context.read<SavingsBloc>().add(AddSaving(saving));
+                            final description = descriptionController.text.isEmpty
+                                ? null
+                                : descriptionController.text;
+                            if (isEdit) {
+                              final updated = existing.copyWith(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                              );
+                              this.context.read<SavingsBloc>().add(UpdateSaving(updated));
+                            } else {
+                              final saving = SavingsModel(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                                createdAt: DateTime.now(),
+                              );
+                              this.context.read<SavingsBloc>().add(AddSaving(saving));
+                            }
                             Navigator.pop(ctx);
                           }
                         },
-                        child: const Text('Save Saving', style: TextStyle(color: Colors.white)),
+                        child: Text(
+                          isEdit ? 'Update Saving' : 'Save Saving',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -241,6 +266,11 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                         onDelete: () {
                           context.read<SavingsBloc>().add(DeleteSaving(item.id!));
                         },
+                        onTap: () => _showSavingBottomSheet(
+                          context,
+                          state.customCategories,
+                          existing: item,
+                        ),
                       );
                     },
                   ),
@@ -261,7 +291,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
           }
           return FloatingActionButton(
             backgroundColor: colors.savings,
-            onPressed: () => _showAddSavingBottomSheet(context, customCategories),
+            onPressed: () => _showSavingBottomSheet(context, customCategories),
             child: const Icon(Icons.add),
           );
         },

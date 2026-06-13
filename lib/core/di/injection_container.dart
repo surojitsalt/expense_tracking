@@ -30,6 +30,9 @@ import '../../features/savings/domain/savings_withdrawal_usecase.dart';
 // Reports
 import '../../features/reports/bloc/report_bloc.dart';
 
+// Export
+import '../../features/export/data/export_service.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -57,6 +60,14 @@ Future<void> initDependencies() async {
   sl.registerFactory(() => ExpenseBloc(expenseUseCase: sl()));
   sl.registerFactory(() => SavingsBloc(savingsUseCase: sl()));
   sl.registerFactory(() => ReportBloc(
+        incomeUseCase: sl(),
+        expenseUseCase: sl(),
+        savingsUseCase: sl(),
+        withdrawalUseCase: sl(),
+      ));
+
+  // Export
+  sl.registerLazySingleton(() => ExportService(
         incomeUseCase: sl(),
         expenseUseCase: sl(),
         savingsUseCase: sl(),

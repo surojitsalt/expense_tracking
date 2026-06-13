@@ -15,6 +15,16 @@ class IncomeUseCase {
     return repository.addIncome(income);
   }
 
+  Future<int> updateIncome(IncomeModel income) {
+    if (income.id == null) {
+      throw Exception("Cannot update an income without an id");
+    }
+    if (income.amount <= 0) {
+      throw Exception("Amount must be greater than zero");
+    }
+    return repository.updateIncome(income);
+  }
+
   Future<int> deleteIncome(int id) => repository.deleteIncome(id);
   
   Future<List<String>> getCustomCategories() => repository.getCustomCategories();

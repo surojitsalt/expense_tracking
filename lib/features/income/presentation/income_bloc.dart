@@ -24,6 +24,15 @@ class AddIncome extends IncomeEvent {
   List<Object?> get props => [income];
 }
 
+class UpdateIncome extends IncomeEvent {
+  final IncomeModel income;
+
+  const UpdateIncome(this.income);
+
+  @override
+  List<Object?> get props => [income];
+}
+
 class DeleteIncome extends IncomeEvent {
   final int id;
 
@@ -84,6 +93,7 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
   IncomeBloc({required this.incomeUseCase, required this.savingsUseCase}) : super(IncomeInitial()) {
     on<LoadIncomes>(_onLoadIncomes);
     on<AddIncome>(_onAddIncome);
+    on<UpdateIncome>(_onUpdateIncome);
     on<DeleteIncome>(_onDeleteIncome);
     on<LoadCustomCategories>(_onLoadCustomCategories);
     on<AddCustomCategory>(_onAddCustomCategory);
@@ -114,6 +124,19 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
         );
         await savingsUseCase.addSaving(withdrawal);
       }
+      add(LoadIncomes());
+    } catch (e) {
+      emit(IncomeError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateIncome(UpdateIncome event, Emitter<IncomeState> emit) async {
+    // NOTE: editing an Income does NOT sync the linked savings_records row that
+    // was auto-created on Add when category == 'Savings'. The two rows have no
+    // FK to each other; trying to sync on edit would be fragile. Adjust the
+    // savings row manually if you change a Savings-category income.
+    try {
+      await incomeUseCase.updateIncome(event.income);
       add(LoadIncomes());
     } catch (e) {
       emit(IncomeError(e.toString()));

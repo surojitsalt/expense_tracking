@@ -28,12 +28,23 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
     context.read<ExpenseBloc>().add(LoadExpenses());
   }
 
-  void _showAddExpenseBottomSheet(BuildContext context, List<String> customCategories) {
+  void _showExpenseBottomSheet(
+    BuildContext context,
+    List<String> customCategories, {
+    ExpenseModel? existing,
+  }) {
+    final isEdit = existing != null;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final amountController = TextEditingController();
-    final descriptionController = TextEditingController();
-    String selectedCategory = _defaultCategories.first;
-    DateTime selectedDate = DateTime.now();
+    final amountController = TextEditingController(
+      text: isEdit ? existing.amount.toString() : '',
+    );
+    final descriptionController = TextEditingController(
+      text: isEdit ? (existing.description ?? '') : '',
+    );
+    String selectedCategory = isEdit
+        ? existing.category
+        : _defaultCategories.first;
+    DateTime selectedDate = isEdit ? existing.date : DateTime.now();
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -58,9 +69,9 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Add Expense',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Text(
+                      isEdit ? 'Edit Expense' : 'Add Expense',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     AmountInputField(controller: amountController, currencySymbol: currencySymbol),
@@ -122,20 +133,34 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             final amount = double.parse(amountController.text);
-                            final expense = ExpenseModel(
-                              amount: amount,
-                              category: selectedCategory,
-                              description: descriptionController.text.isEmpty
-                                  ? null
-                                  : descriptionController.text,
-                              date: selectedDate,
-                              createdAt: DateTime.now(),
-                            );
-                            this.context.read<ExpenseBloc>().add(AddExpense(expense));
+                            final description = descriptionController.text.isEmpty
+                                ? null
+                                : descriptionController.text;
+                            if (isEdit) {
+                              final updated = existing.copyWith(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                              );
+                              this.context.read<ExpenseBloc>().add(UpdateExpense(updated));
+                            } else {
+                              final expense = ExpenseModel(
+                                amount: amount,
+                                category: selectedCategory,
+                                description: description,
+                                date: selectedDate,
+                                createdAt: DateTime.now(),
+                              );
+                              this.context.read<ExpenseBloc>().add(AddExpense(expense));
+                            }
                             Navigator.pop(ctx);
                           }
                         },
-                        child: const Text('Save Expense', style: TextStyle(color: Colors.white)),
+                        child: Text(
+                          isEdit ? 'Update Expense' : 'Save Expense',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -243,6 +268,11 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
                         onDelete: () {
                           context.read<ExpenseBloc>().add(DeleteExpense(item.id!));
                         },
+                        onTap: () => _showExpenseBottomSheet(
+                          context,
+                          state.customCategories,
+                          existing: item,
+                        ),
                       );
                     },
                   ),
@@ -263,7 +293,7 @@ class _ExpenseDetailsScreenState extends State<ExpenseDetailsScreen> {
           }
           return FloatingActionButton(
             backgroundColor: colors.expense,
-            onPressed: () => _showAddExpenseBottomSheet(context, customCategories),
+            onPressed: () => _showExpenseBottomSheet(context, customCategories),
             child: const Icon(Icons.add),
           );
         },

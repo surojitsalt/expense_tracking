@@ -33,6 +33,20 @@ class AddSavingsWithdrawal extends ReportEvent {
   List<Object?> get props => [withdrawal];
 }
 
+class UpdateSavingsWithdrawal extends ReportEvent {
+  final SavingsWithdrawalModel withdrawal;
+  const UpdateSavingsWithdrawal(this.withdrawal);
+  @override
+  List<Object?> get props => [withdrawal];
+}
+
+class DeleteSavingsWithdrawal extends ReportEvent {
+  final int id;
+  const DeleteSavingsWithdrawal(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
 // States
 abstract class ReportState extends Equatable {
   const ReportState();
@@ -99,6 +113,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     on<LoadReport>(_onLoadReport);
     on<FilterReportByDate>(_onFilterReportByDate);
     on<AddSavingsWithdrawal>(_onAddSavingsWithdrawal);
+    on<UpdateSavingsWithdrawal>(_onUpdateSavingsWithdrawal);
+    on<DeleteSavingsWithdrawal>(_onDeleteSavingsWithdrawal);
   }
 
   Future<void> _onLoadReport(LoadReport event, Emitter<ReportState> emit) async {
@@ -150,6 +166,24 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
   Future<void> _onAddSavingsWithdrawal(AddSavingsWithdrawal event, Emitter<ReportState> emit) async {
     try {
       await withdrawalUseCase.addWithdrawal(event.withdrawal);
+      add(LoadReport());
+    } catch (e) {
+      emit(ReportError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateSavingsWithdrawal(UpdateSavingsWithdrawal event, Emitter<ReportState> emit) async {
+    try {
+      await withdrawalUseCase.updateWithdrawal(event.withdrawal);
+      add(LoadReport());
+    } catch (e) {
+      emit(ReportError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteSavingsWithdrawal(DeleteSavingsWithdrawal event, Emitter<ReportState> emit) async {
+    try {
+      await withdrawalUseCase.deleteWithdrawal(event.id);
       add(LoadReport());
     } catch (e) {
       emit(ReportError(e.toString()));

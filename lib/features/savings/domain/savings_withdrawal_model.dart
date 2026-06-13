@@ -15,6 +15,22 @@ class SavingsWithdrawalModel extends Equatable {
     required this.createdAt,
   });
 
+  SavingsWithdrawalModel copyWith({
+    int? id,
+    double? amount,
+    String? description,
+    DateTime? date,
+    DateTime? createdAt,
+  }) {
+    return SavingsWithdrawalModel(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

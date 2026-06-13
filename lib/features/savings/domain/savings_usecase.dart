@@ -18,6 +18,19 @@ class SavingsUseCase {
     return repository.addSaving(saving);
   }
 
+  Future<int> updateSaving(SavingsModel saving) {
+    if (saving.id == null) {
+      throw Exception("Cannot update a saving without an id");
+    }
+    if (saving.amount == 0) {
+      throw Exception("Amount cannot be zero");
+    }
+    if (saving.amount < 0 && saving.category != 'Withdrawn') {
+      throw Exception("Amount must be greater than zero");
+    }
+    return repository.updateSaving(saving);
+  }
+
   Future<int> deleteSaving(int id) => repository.deleteSaving(id);
   
   Future<List<String>> getCustomCategories() => repository.getCustomCategories();

@@ -15,5 +15,15 @@ class SavingsWithdrawalUseCase {
     return repository.addWithdrawal(withdrawal);
   }
 
+  Future<int> updateWithdrawal(SavingsWithdrawalModel withdrawal) {
+    if (withdrawal.id == null) {
+      throw Exception('Cannot update a withdrawal without an id');
+    }
+    if (withdrawal.amount <= 0) {
+      throw Exception('Withdrawal amount must be greater than zero');
+    }
+    return repository.updateWithdrawal(withdrawal);
+  }
+
   Future<int> deleteWithdrawal(int id) => repository.deleteWithdrawal(id);
 }

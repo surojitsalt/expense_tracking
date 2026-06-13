@@ -22,6 +22,15 @@ class AddSaving extends SavingsEvent {
   List<Object?> get props => [saving];
 }
 
+class UpdateSaving extends SavingsEvent {
+  final SavingsModel saving;
+
+  const UpdateSaving(this.saving);
+
+  @override
+  List<Object?> get props => [saving];
+}
+
 class DeleteSaving extends SavingsEvent {
   final int id;
 
@@ -81,6 +90,7 @@ class SavingsBloc extends Bloc<SavingsEvent, SavingsState> {
   SavingsBloc({required this.savingsUseCase}) : super(SavingsInitial()) {
     on<LoadSavings>(_onLoadSavings);
     on<AddSaving>(_onAddSaving);
+    on<UpdateSaving>(_onUpdateSaving);
     on<DeleteSaving>(_onDeleteSaving);
     on<LoadCustomCategories>(_onLoadCustomCategories);
     on<AddCustomCategory>(_onAddCustomCategory);
@@ -101,6 +111,15 @@ class SavingsBloc extends Bloc<SavingsEvent, SavingsState> {
   Future<void> _onAddSaving(AddSaving event, Emitter<SavingsState> emit) async {
     try {
       await savingsUseCase.addSaving(event.saving);
+      add(LoadSavings());
+    } catch (e) {
+      emit(SavingsError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateSaving(UpdateSaving event, Emitter<SavingsState> emit) async {
+    try {
+      await savingsUseCase.updateSaving(event.saving);
       add(LoadSavings());
     } catch (e) {
       emit(SavingsError(e.toString()));

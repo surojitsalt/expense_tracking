@@ -1,8 +1,39 @@
 import 'package:flutter/material.dart';
+import '../core/di/injection_container.dart';
 import '../core/theme/expense_tracker_app_colors.dart';
+import '../features/export/data/export_service.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  Future<void> _handleExport(BuildContext context) async {
+    Navigator.pop(context); // close the drawer
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Preparing export…'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    try {
+      final result = await sl<ExportService>().exportAllAsCsv();
+      messenger.hideCurrentSnackBar();
+      if (result.rowCount == 0) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Nothing to export yet.')),
+        );
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text('Exported ${result.rowCount} records.')),
+      );
+    } catch (e) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(content: Text('Export failed: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +124,12 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.ios_share, color: Colors.grey),
+            title: const Text('Export Data'),
+            subtitle: const Text('Share all records as CSV'),
+            onTap: () => _handleExport(context),
+          ),
           ListTile(
             leading: const Icon(Icons.settings, color: Colors.grey),
             title: const Text('Settings'),

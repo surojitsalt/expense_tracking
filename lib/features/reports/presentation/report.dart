@@ -38,18 +38,23 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  void _showWithdrawalDialog() {
+  void _showWithdrawalDialog({SavingsWithdrawalModel? existing}) {
+    final isEdit = existing != null;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final amountController = TextEditingController();
-    final descController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
+    final amountController = TextEditingController(
+      text: isEdit ? existing.amount.toString() : '',
+    );
+    final descController = TextEditingController(
+      text: isEdit ? (existing.description ?? '') : '',
+    );
+    DateTime selectedDate = isEdit ? existing.date : DateTime.now();
 
     showDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setDialogState) {
           return AlertDialog(
-            title: const Text('Withdraw from Savings'),
+            title: Text(isEdit ? 'Edit Withdrawal' : 'Withdraw from Savings'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -97,27 +102,113 @@ class _ReportScreenState extends State<ReportScreen> {
                 onPressed: () {
                   final amount = double.tryParse(amountController.text.trim());
                   if (amount == null || amount <= 0) return;
-                  context.read<ReportBloc>().add(
-                    AddSavingsWithdrawal(
-                      SavingsWithdrawalModel(
-                        amount: amount,
-                        description: descController.text.trim().isEmpty
-                            ? null
-                            : descController.text.trim(),
-                        date: selectedDate,
-                        createdAt: DateTime.now(),
+                  final description = descController.text.trim().isEmpty
+                      ? null
+                      : descController.text.trim();
+                  if (isEdit) {
+                    context.read<ReportBloc>().add(
+                      UpdateSavingsWithdrawal(
+                        existing.copyWith(
+                          amount: amount,
+                          description: description,
+                          date: selectedDate,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    context.read<ReportBloc>().add(
+                      AddSavingsWithdrawal(
+                        SavingsWithdrawalModel(
+                          amount: amount,
+                          description: description,
+                          date: selectedDate,
+                          createdAt: DateTime.now(),
+                        ),
+                      ),
+                    );
+                  }
                   Navigator.pop(ctx);
                 },
-                child: const Text('Withdraw'),
+                child: Text(isEdit ? 'Update' : 'Withdraw'),
               ),
             ],
           );
         });
       },
     );
+  }
+
+  void _showWithdrawalActionSheet(SavingsWithdrawalModel withdrawal) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Edit withdrawal'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showWithdrawalDialog(existing: withdrawal);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error),
+                title: Text('Delete withdrawal',
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDeleteWithdrawal(withdrawal);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteWithdrawal(SavingsWithdrawalModel withdrawal) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete withdrawal?'),
+        content: const Text('Delete this withdrawal? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted && withdrawal.id != null) {
+      context.read<ReportBloc>().add(DeleteSavingsWithdrawal(withdrawal.id!));
+    }
   }
 
   Color _savingsAlertColor(double netSavings) {
@@ -182,7 +273,7 @@ class _ReportScreenState extends State<ReportScreen> {
               allRecords.add({'date': s.date, 'type': 'Saving', 'category': s.category, 'amount': s.amount, 'color': colors.savings});
             }
             for (var w in state.withdrawals) {
-              allRecords.add({'date': w.date, 'type': 'Withdrawal', 'category': 'Savings', 'amount': w.amount, 'color': Colors.deepOrange});
+              allRecords.add({'date': w.date, 'type': 'Withdrawal', 'category': 'Savings', 'amount': w.amount, 'color': Colors.deepOrange, 'withdrawal': w});
             }
             allRecords.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
 
@@ -307,9 +398,17 @@ class _ReportScreenState extends State<ReportScreen> {
                                 DataColumn(label: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold))),
                               ],
                               rows: allRecords.map((r) {
+                                final withdrawal = r['withdrawal'] as SavingsWithdrawalModel?;
+                                final isWithdrawal = withdrawal != null;
+                                final onCellTap = isWithdrawal
+                                    ? () => _showWithdrawalActionSheet(withdrawal)
+                                    : null;
                                 return DataRow(
                                   cells: [
-                                    DataCell(Text(DateFormat('MMM dd, yyyy').format(r['date'] as DateTime))),
+                                    DataCell(
+                                      Text(DateFormat('MMM dd, yyyy').format(r['date'] as DateTime)),
+                                      onTap: onCellTap,
+                                    ),
                                     DataCell(
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -317,14 +416,30 @@ class _ReportScreenState extends State<ReportScreen> {
                                           color: r['color'],
                                           borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: Text(
-                                          r['type'],
-                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              r['type'],
+                                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                                            ),
+                                            if (isWithdrawal) ...[
+                                              const SizedBox(width: 4),
+                                              const Icon(Icons.more_vert, color: Colors.white, size: 14),
+                                            ],
+                                          ],
                                         ),
                                       ),
+                                      onTap: onCellTap,
                                     ),
-                                    DataCell(Text(r['category'])),
-                                    DataCell(Text('$currencySymbol ${(r['amount'] as double).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    DataCell(Text(r['category']), onTap: onCellTap),
+                                    DataCell(
+                                      Text(
+                                        '$currencySymbol ${(r['amount'] as double).toStringAsFixed(2)}',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      onTap: onCellTap,
+                                    ),
                                   ],
                                 );
                               }).toList(),
