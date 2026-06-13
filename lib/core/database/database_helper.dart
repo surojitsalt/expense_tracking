@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -60,7 +60,8 @@ class DatabaseHelper {
         category $textType,
         description $textTypeNullable,
         date $textType,
-        created_at $textType
+        created_at $textType,
+        linked_expense_id INTEGER
       )
     ''');
 
@@ -95,6 +96,11 @@ class DatabaseHelper {
           created_at TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE savings_records ADD COLUMN linked_expense_id INTEGER',
+      );
     }
   }
 

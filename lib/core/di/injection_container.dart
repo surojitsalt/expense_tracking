@@ -58,7 +58,7 @@ Future<void> initDependencies() async {
   // BLoCs
   sl.registerFactory(() => IncomeBloc(incomeUseCase: sl(), savingsUseCase: sl()));
   sl.registerFactory(() => ExpenseBloc(expenseUseCase: sl()));
-  sl.registerFactory(() => SavingsBloc(savingsUseCase: sl()));
+  sl.registerFactory(() => SavingsBloc(savingsUseCase: sl(), expenseUseCase: sl()));
   sl.registerFactory(() => ReportBloc(
         incomeUseCase: sl(),
         expenseUseCase: sl(),

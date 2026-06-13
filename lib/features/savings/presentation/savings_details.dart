@@ -43,6 +43,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
         ? existing.category
         : _defaultCategories.first;
     DateTime selectedDate = isEdit ? existing.date : DateTime.now();
+    bool linkToIncome = isEdit ? existing.linkedExpenseId != null : false;
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -95,7 +96,24 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                       controller: descriptionController,
                       decoration: const InputDecoration(labelText: 'Description (Optional)'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: Theme.of(context).extension<ExpenseTrackerAppColors>()!.savings,
+                      value: linkToIncome,
+                      onChanged: (value) {
+                        setModalState(() {
+                          linkToIncome = value ?? false;
+                        });
+                      },
+                      title: const Text('Deduct from income'),
+                      subtitle: const Text(
+                        'Adds a matching "Savings" expense so this is subtracted from income in reports.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(Icons.calendar_today, size: 16),
@@ -141,7 +159,9 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                 description: description,
                                 date: selectedDate,
                               );
-                              this.context.read<SavingsBloc>().add(UpdateSaving(updated));
+                              this.context.read<SavingsBloc>().add(
+                                    UpdateSaving(updated, linkToIncome: linkToIncome),
+                                  );
                             } else {
                               final saving = SavingsModel(
                                 amount: amount,
@@ -150,7 +170,9 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                 date: selectedDate,
                                 createdAt: DateTime.now(),
                               );
-                              this.context.read<SavingsBloc>().add(AddSaving(saving));
+                              this.context.read<SavingsBloc>().add(
+                                    AddSaving(saving, linkToIncome: linkToIncome),
+                                  );
                             }
                             Navigator.pop(ctx);
                           }
@@ -264,7 +286,9 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                         date: item.date,
                         cardColor: Colors.white,
                         onDelete: () {
-                          context.read<SavingsBloc>().add(DeleteSaving(item.id!));
+                          context.read<SavingsBloc>().add(
+                                DeleteSaving(item.id!, linkedExpenseId: item.linkedExpenseId),
+                              );
                         },
                         onTap: () => _showSavingBottomSheet(
                           context,

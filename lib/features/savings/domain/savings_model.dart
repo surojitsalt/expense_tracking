@@ -7,6 +7,9 @@ class SavingsModel extends Equatable {
   final String? description;
   final DateTime date;
   final DateTime createdAt;
+  // Id of the expense_records row auto-created when this saving is deducted
+  // from income. Null when the saving is not linked to an expense.
+  final int? linkedExpenseId;
 
   const SavingsModel({
     this.id,
@@ -15,6 +18,7 @@ class SavingsModel extends Equatable {
     this.description,
     required this.date,
     required this.createdAt,
+    this.linkedExpenseId,
   });
 
   SavingsModel copyWith({
@@ -24,6 +28,7 @@ class SavingsModel extends Equatable {
     String? description,
     DateTime? date,
     DateTime? createdAt,
+    int? linkedExpenseId,
   }) {
     return SavingsModel(
       id: id ?? this.id,
@@ -32,6 +37,7 @@ class SavingsModel extends Equatable {
       description: description ?? this.description,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
+      linkedExpenseId: linkedExpenseId ?? this.linkedExpenseId,
     );
   }
 
@@ -43,6 +49,7 @@ class SavingsModel extends Equatable {
       'description': description,
       'date': date.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
+      'linked_expense_id': linkedExpenseId,
     };
   }
 
@@ -54,9 +61,10 @@ class SavingsModel extends Equatable {
       description: map['description'] as String?,
       date: DateTime.parse(map['date'] as String),
       createdAt: DateTime.parse(map['created_at'] as String),
+      linkedExpenseId: map['linked_expense_id'] as int?,
     );
   }
 
   @override
-  List<Object?> get props => [id, amount, category, description, date, createdAt];
+  List<Object?> get props => [id, amount, category, description, date, createdAt, linkedExpenseId];
 }
